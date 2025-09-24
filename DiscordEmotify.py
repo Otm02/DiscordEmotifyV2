@@ -32,6 +32,23 @@ try:
 except Exception:
     emoji_lib = None
 
+# ---------------- Versioning & App metadata -----------------
+APP_NAME = "DiscordEmotify"
+__version__ = "1.0.0"
+REPO_URL = "https://github.com/Otm02/DiscordEmotifyV2"
+USER_AGENT = f"{APP_NAME}/{__version__} (+{REPO_URL})"
+
+
+def resource_path(relative_path: str) -> str:
+    """Get absolute path to resource, works for development and for PyInstaller bundled app.
+    When bundled, PyInstaller sets sys._MEIPASS to the temp folder containing extracted files.
+    """
+    try:
+        base_path = getattr(sys, "_MEIPASS")  # type: ignore[attr-defined]
+    except Exception:
+        base_path = os.path.dirname(__file__)
+    return os.path.join(base_path, relative_path)
+
 
 DISCORD_BG = "#2f3136"
 DISCORD_SIDEBAR = "#202225"
@@ -84,9 +101,7 @@ class DiscordEmotify(QWidget):
         # Performance: reuse a single HTTP session, set timeouts, and cache images
         self._timeout = 15
         self.http = requests.Session()
-        self.http.headers.update(
-            {"User-Agent": "DiscordEmotify/1.0 (+https://localhost)"}
-        )
+        self.http.headers.update({"User-Agent": USER_AGENT})
         self._img_cache = {}
         self._reacting = False
         self._pending_guild_for_load = None
@@ -184,12 +199,10 @@ class DiscordEmotify(QWidget):
         threading.Thread(target=_restore, daemon=True).start()
 
     def _build_ui(self):
-        self.setWindowTitle("DiscordEmotify")
+        self.setWindowTitle(f"{APP_NAME} v{__version__}")
         # Set window icon from local DiscordEmotify.ico
         try:
-            app_icon_path = os.path.join(
-                os.path.dirname(__file__), "DiscordEmotify.ico"
-            )
+            app_icon_path = resource_path("DiscordEmotify.ico")
             if os.path.exists(app_icon_path):
                 self.setWindowIcon(QIcon(app_icon_path))
         except Exception:
@@ -413,8 +426,8 @@ class DiscordEmotify(QWidget):
         right_layout.addStretch(1)
         disclaimer = QLabel(
             "Only use this app if you obtained it from the official repository:\n"
-            "https://github.com/Otm02/DiscordEmotifyV2\n"
-            "By Athmane Benarous"
+            f"{REPO_URL}\n"
+            f"By Athmane Benarous — v{__version__}"
         )
         disclaimer.setObjectName("muted")
         disclaimer.setWordWrap(True)
@@ -480,7 +493,7 @@ class DiscordEmotify(QWidget):
 
     def _default_circular_icon(self, size: int = 48) -> QPixmap:
         # Try to load discord_icon.ico from workspace; fall back to a white circle
-        icon_path = os.path.join(os.path.dirname(__file__), "discord_icon.ico")
+        icon_path = resource_path("discord_icon.ico")
         pm = QPixmap()
         if os.path.exists(icon_path):
             pm = QPixmap(icon_path)
@@ -603,9 +616,7 @@ class DiscordEmotify(QWidget):
         def worker(fetch_url: str, k: str):
             try:
                 sess = requests.Session()
-                sess.headers.update(
-                    {"User-Agent": "DiscordEmotify/1.0 (+https://localhost)"}
-                )
+                sess.headers.update({"User-Agent": USER_AGENT})
                 r = sess.get(fetch_url, timeout=self._timeout)
                 data = r.content if r.status_code == 200 else b""
                 self.sig_image_loaded.emit(k, data)
@@ -672,9 +683,7 @@ class DiscordEmotify(QWidget):
         def _load_guilds():
             try:
                 sess = requests.Session()
-                sess.headers.update(
-                    {"User-Agent": "DiscordEmotify/1.0 (+https://localhost)"}
-                )
+                sess.headers.update({"User-Agent": USER_AGENT})
                 r = sess.get(
                     "https://discord.com/api/v10/users/@me/guilds",
                     headers=self._headers(),
@@ -734,9 +743,7 @@ class DiscordEmotify(QWidget):
             def _load_friends():
                 try:
                     sess = requests.Session()
-                    sess.headers.update(
-                        {"User-Agent": "DiscordEmotify/1.0 (+https://localhost)"}
-                    )
+                    sess.headers.update({"User-Agent": USER_AGENT})
                     # Fetch friend relationships
                     rel_resp = sess.get(
                         "https://discord.com/api/v10/users/@me/relationships",
@@ -838,9 +845,7 @@ class DiscordEmotify(QWidget):
             def _load_channels(gid: str):
                 try:
                     sess = requests.Session()
-                    sess.headers.update(
-                        {"User-Agent": "DiscordEmotify/1.0 (+https://localhost)"}
-                    )
+                    sess.headers.update({"User-Agent": USER_AGENT})
                     r = sess.get(
                         f"https://discord.com/api/v10/guilds/{gid}/channels",
                         headers=self._headers(),
@@ -1027,9 +1032,7 @@ class DiscordEmotify(QWidget):
                 try:
                     # Use a local session in worker to avoid thread-safety issues
                     sess = requests.Session()
-                    sess.headers.update(
-                        {"User-Agent": "DiscordEmotify/1.0 (+https://localhost)"}
-                    )
+                    sess.headers.update({"User-Agent": USER_AGENT})
                     processed = 0
                     if oldest_first:
                         # Phase 1: find the oldest message id by walking backwards with 'before'
@@ -1260,7 +1263,7 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     # Set application icon for taskbar and new windows
     try:
-        app_icon_path = os.path.join(os.path.dirname(__file__), "DiscordEmotify.ico")
+        app_icon_path = resource_path("DiscordEmotify.ico")
         if os.path.exists(app_icon_path):
             app.setWindowIcon(QIcon(app_icon_path))
     except Exception:
