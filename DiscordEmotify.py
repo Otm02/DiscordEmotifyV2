@@ -372,13 +372,13 @@ class DiscordEmotify(QWidget):
         self.emoji_edit = QLineEdit()
         # Updated placeholder to guide users about multiple entries and syntax
         self.emoji_edit.setPlaceholderText(
-            "😀 :emoji: name:id  (separate multiple with space or comma)"
+            "😀 :emoji: name:id  (multiple allowed; separators optional)"
         )
         right_layout.addWidget(self.emoji_edit)
         # Small hint label (muted style) below the input
         emoji_hint = QLabel(
             "Tip: Press Windows + . (Win key + period) to open the system emoji picker. "
-            "You can enter multiple emojis separated by space or comma. Supports unicode, :shortcode:, :custom_name:, and name:id."
+            "You can enter multiple emojis; spaces/commas are optional (adjacent emojis are parsed). Supports unicode, :shortcode:, :custom_name:, and name:id."
         )
         emoji_hint.setWordWrap(True)
         emoji_hint.setObjectName("muted")
@@ -546,6 +546,70 @@ class DiscordEmotify(QWidget):
                 if str(e.get("name", "")).lower() == name.lower():
                     return f"{e.get('name')}:{e.get('id')}"
         return None
+
+        def _tokenize_emojis(self, text: str):
+            """Tokenize an input string into emoji/emote tokens.
+            Supports:
+            - Unicode emojis (including sequences) — adjacent with no separators
+            - :shortcode: style (standard or custom-name placeholders)
+            - name:id custom emoji reference
+            Separators (spaces/commas) are optional; adjacent tokens are detected.
+            """
+            if not text:
+                return []
+            tokens = []
+            i = 0
+            n = len(text)
+            name_id_re = re.compile(r"^([A-Za-z0-9_]+:[0-9]+)")
+            shortcode_re = re.compile(r"^:([A-Za-z0-9_]+):")
+            emoji_re = None
+            if emoji_lib is not None:
+                try:
+                    emoji_re = emoji_lib.get_emoji_regexp()
+                except Exception:
+                    emoji_re = None
+
+            while i < n:
+                ch = text[i]
+                # Skip optional separators
+                if ch.isspace() or ch == ',':
+                    i += 1
+                    continue
+
+                substr = text[i:]
+
+                # name:id
+                m = name_id_re.match(substr)
+                if m:
+                    tokens.append(m.group(1))
+                    i += len(m.group(1))
+                    continue
+
+                # :shortcode:
+                m = shortcode_re.match(substr)
+                if m:
+                    tokens.append(f":{m.group(1)}:")
+                    i += len(m.group(0))
+                    continue
+
+                # Unicode emoji sequence
+                if emoji_re is not None:
+                    m = emoji_re.match(substr)
+                    if m:
+                        tokens.append(m.group(0))
+                        i += len(m.group(0))
+                        continue
+
+                # Fallback: capture a run of non-separator characters as a token
+                j = i
+                while j < n and (not text[j].isspace()) and text[j] != ',':
+                    j += 1
+                chunk = text[i:j]
+                if chunk:
+                    tokens.append(chunk)
+                i = j
+
+            return tokens
 
     def _resolve_emoji_for_api(self, text: str, guild_id: str = None) -> str:
         # If input is like :name:, try unicode first via emoji library, else treat as custom name
@@ -1001,8 +1065,8 @@ class DiscordEmotify(QWidget):
             emoji_input = self.emoji_edit.text().strip()
             if not self.selected_channel or not emoji_input:
                 return
-            # Parse multiple emoji tokens (split by comma or whitespace)
-            tokens = [t for t in re.split(r"[\s,]+", emoji_input) if t]
+            # Parse multiple emoji tokens (spaces/commas optional; adjacent supported)
+            tokens = self._tokenize_emojis(emoji_input)
             resolved_list = []
             not_found = []
             for t in tokens:

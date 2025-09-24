@@ -1,5 +1,12 @@
 # DiscordEmotify
 
+<a href="https://github.com/Otm02/DiscordEmotifyV2" title="DiscordEmotify on GitHub">
+	<img src="./DiscordEmotify.ico" alt="DiscordEmotify logo" width="96" height="96" />
+	<br/>
+	Visit the GitHub Repository
+  
+</a>
+
 A desktop app to react with emojis or emotes to all messages in a selected Discord channel or DM.
 
 ## Features
@@ -42,7 +49,7 @@ Release assets are typically named like `DiscordEmotify-vX.Y.Z-win64.zip` and co
 	- Type `:smile:` or any standard shortcode (resolved via the `emoji` library if installed)
 	- Type `:custom_name:` to auto-resolve a custom guild emoji (falls back across your guilds)
 	- Or provide explicit custom format `name:id` if you know the emoji ID
-	- Multiple emojis can be entered; separate them by space or comma. Each emoji will be applied sequentially per message.
+	- Multiple emojis can be entered; spaces/commas are optional and adjacent emojis are parsed. Each emoji will be applied sequentially per message.
 6. Click "React to All Messages" (Start / Stop toggle)
 
 Note: Using user tokens for automation may violate Discord TOS. Use at your own risk.
