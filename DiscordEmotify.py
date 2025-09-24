@@ -572,7 +572,7 @@ class DiscordEmotify(QWidget):
             while i < n:
                 ch = text[i]
                 # Skip optional separators
-                if ch.isspace() or ch == ',':
+                if ch.isspace() or ch == ",":
                     i += 1
                     continue
 
@@ -602,7 +602,7 @@ class DiscordEmotify(QWidget):
 
                 # Fallback: capture a run of non-separator characters as a token
                 j = i
-                while j < n and (not text[j].isspace()) and text[j] != ',':
+                while j < n and (not text[j].isspace()) and text[j] != ",":
                     j += 1
                 chunk = text[i:j]
                 if chunk:

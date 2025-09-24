@@ -1,10 +1,7 @@
 # DiscordEmotify
 
 <a href="https://github.com/Otm02/DiscordEmotifyV2" title="DiscordEmotify on GitHub">
-	<img src="./DiscordEmotify.ico" alt="DiscordEmotify logo" width="96" height="96" />
-	<br/>
-	Visit the GitHub Repository
-  
+	<img src="./DiscordEmotify.png" alt="DiscordEmotify logo" width="96" height="96" />
 </a>
 
 A desktop app to react with emojis or emotes to all messages in a selected Discord channel or DM.
