@@ -34,7 +34,7 @@ except Exception:
 
 # ---------------- Versioning & App metadata -----------------
 APP_NAME = "DiscordEmotify"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 REPO_URL = "https://github.com/Otm02/DiscordEmotifyV2"
 USER_AGENT = f"{APP_NAME}/{__version__} (+{REPO_URL})"
 
@@ -676,6 +676,12 @@ class DiscordEmotify(QWidget):
         friends_item.setData(Qt.UserRole, "friends")
         friends_item.setSizeHint(QSize(60, 60))
         self.servers_list.addItem(friends_item)
+        # Auto-select and open Friends by default
+        try:
+            self.servers_list.setCurrentItem(friends_item)
+            self.on_server_click(friends_item)
+        except Exception:
+            pass
 
         self._set_loading(True)
 
