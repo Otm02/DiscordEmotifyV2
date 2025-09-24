@@ -1,4 +1,4 @@
-# DiscordEmotify
+# DiscordEmotify V2
 
 <a href="https://github.com/Otm02/DiscordEmotifyV2" title="DiscordEmotify on GitHub">
 	<img src="./DiscordEmotify.png" alt="DiscordEmotify logo" width="96" height="96" />
