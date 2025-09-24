@@ -19,8 +19,8 @@ from PyQt5.QtWidgets import (
     QSpinBox,
     QMessageBox,
 )
-from PyQt5.QtCore import Qt, QSize, pyqtSignal, QSettings
-from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath
+from PyQt5.QtCore import Qt, QSize, pyqtSignal, QSettings, QUrl
+from PyQt5.QtGui import QIcon, QPixmap, QPainter, QPainterPath, QDesktopServices
 import requests
 import urllib.parse
 import threading
@@ -271,6 +271,14 @@ class DiscordEmotify(QWidget):
         # Hide token input characters
         self.token_edit.setEchoMode(QLineEdit.Password)
         top_bar.addWidget(self.token_edit, 1)
+        # Help button linking to official token instructions
+        self.token_help_btn = QPushButton("?")
+        self.token_help_btn.setFixedWidth(28)
+        self.token_help_btn.setToolTip(
+            "Open token retrieval instructions (official repo)"
+        )
+        self.token_help_btn.clicked.connect(self._open_token_help)
+        top_bar.addWidget(self.token_help_btn)
         self.connect_btn = QPushButton("Connect")
         self.connect_btn.clicked.connect(self.connect)
         top_bar.addWidget(self.connect_btn)
@@ -403,8 +411,13 @@ class DiscordEmotify(QWidget):
         self.status_label.setObjectName("muted")
         right_layout.addWidget(self.status_label)
         right_layout.addStretch(1)
-        disclaimer = QLabel("Note: Using user tokens may violate Discord's TOS.")
+        disclaimer = QLabel(
+            "Only use this app if you obtained it from the official repository:\n"
+            "https://github.com/Otm02/DiscordEmotifyV2\n"
+            "By Athmane Benarous"
+        )
         disclaimer.setObjectName("muted")
+        disclaimer.setWordWrap(True)
         right_layout.addWidget(disclaimer)
 
         # Add to splitter
@@ -1230,6 +1243,17 @@ class DiscordEmotify(QWidget):
             self.react_btn.setChecked(False)
             self.react_btn.setText("Start")
             self.status_label.setText("Stopping…")
+
+    def _open_token_help(self):
+        """Open the GitHub HOW_TO_GET_TOKEN.md guide in the user's default browser."""
+        try:
+            QDesktopServices.openUrl(
+                QUrl(
+                    "https://github.com/Otm02/DiscordEmotifyV2/blob/main/HOW_TO_GET_TOKEN.md"
+                )
+            )
+        except Exception:
+            self.sig_status.emit("Could not open help URL")
 
 
 if __name__ == "__main__":

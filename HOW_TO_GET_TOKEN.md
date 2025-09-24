@@ -1,4 +1,4 @@
-## How to Retrieve Your Discord User Token (Chrome Example)
+## How to Retrieve Your Discord User Token
 
 > IMPORTANT: Your user token is a secret. Anyone with it can fully control your account. Never share it, never commit it to version control, and prefer using an official **Bot Token** (via the Discord Developer Portal) whenever possible. Using a user token for automation likely violates Discord's Terms of Service and can get your account disabled. Proceed only if you understand the risks.
 
@@ -9,7 +9,7 @@ If you just need to react to messages programmatically, the compliant approach i
 2. Invite the bot to your server with appropriate permissions.
 3. Use the bot token instead of a user token (this app currently expects a user token, so you'd need to adapt code for the bot API if you go that route).
 
-### 2. Chrome (or any Chromium-based browser) Steps
+### 2. Chromium-based Browsers (Chrome, Edge, Brave, Vivaldi, etc.)
 
 1. Open Discord in your browser: https://discord.com/app
 2. Log in (if you are not already).
@@ -22,7 +22,7 @@ If you just need to react to messages programmatically, the compliant approach i
 9. In `Request Headers`, locate the `Authorization` header.
 10. Copy the entire value (it will look like a long base64-like string). This is your user token.
 
-### 3. Firefox Steps (Optional)
+### 3. Firefox
 
 1. Open Discord in Firefox.
 2. Press `F12` to open DevTools, choose the `Network` tab.
