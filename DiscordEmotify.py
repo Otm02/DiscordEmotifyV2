@@ -34,7 +34,7 @@ except Exception:
 
 # ---------------- Versioning & App metadata -----------------
 APP_NAME = "DiscordEmotify"
-__version__ = "1.0.1"
+__version__ = "1.1.0"
 REPO_URL = "https://github.com/Otm02/DiscordEmotifyV2"
 USER_AGENT = f"{APP_NAME}/{__version__} (+{REPO_URL})"
 
@@ -370,14 +370,15 @@ class DiscordEmotify(QWidget):
         right_layout = QVBoxLayout(right_widget)
         right_layout.addWidget(QLabel("Emoji to react with:"))
         self.emoji_edit = QLineEdit()
-        # Updated placeholder to guide users about Windows emoji picker and :emoji: syntax
-        self.emoji_edit.setPlaceholderText("😀 or :emoji:")
+        # Updated placeholder to guide users about multiple entries and syntax
+        self.emoji_edit.setPlaceholderText(
+            "😀 :emoji: name:id  (separate multiple with space or comma)"
+        )
         right_layout.addWidget(self.emoji_edit)
         # Small hint label (muted style) below the input
         emoji_hint = QLabel(
             "Tip: Press Windows + . (Win key + period) to open the system emoji picker. "
-            "You can also type :smile: (unicode) or :custom_name: to resolve a custom guild emoji;"
-            " for explicit custom use name:id."
+            "You can enter multiple emojis separated by space or comma. Supports unicode, :shortcode:, :custom_name:, and name:id."
         )
         emoji_hint.setWordWrap(True)
         emoji_hint.setObjectName("muted")
@@ -1000,11 +1001,23 @@ class DiscordEmotify(QWidget):
             emoji_input = self.emoji_edit.text().strip()
             if not self.selected_channel or not emoji_input:
                 return
-            # Resolve :emote: or unicode/custom to API path format (unicode char or name:id)
-            resolved = self._resolve_emoji_for_api(emoji_input, self.selected_guild_id)
-            if not resolved:
-                self.sig_status.emit(f"Emoji {emoji_input} not found")
+            # Parse multiple emoji tokens (split by comma or whitespace)
+            tokens = [t for t in re.split(r"[\s,]+", emoji_input) if t]
+            resolved_list = []
+            not_found = []
+            for t in tokens:
+                r = self._resolve_emoji_for_api(t, self.selected_guild_id)
+                if r:
+                    resolved_list.append(r)
+                else:
+                    not_found.append(t)
+            if not resolved_list:
+                self.sig_status.emit(f"No valid emoji found from: {' '.join(tokens)}")
                 return
+            if not_found:
+                self.sig_status.emit(
+                    f"Some not found: {', '.join(not_found)}; continuing with others"
+                )
             self._reacting = True
             self.react_btn.setText("Stop")
             self.status_label.setText("Starting…")
@@ -1032,14 +1045,15 @@ class DiscordEmotify(QWidget):
                 max_messages = 0
             channel_id = self.selected_channel
             headers = self._headers()
-            emoji_enc = urllib.parse.quote(resolved)
+            emoji_encodings = [urllib.parse.quote(e) for e in resolved_list]
 
             def worker():
                 try:
                     # Use a local session in worker to avoid thread-safety issues
                     sess = requests.Session()
                     sess.headers.update({"User-Agent": USER_AGENT})
-                    processed = 0
+                    processed_messages = 0
+                    processed_reactions = 0
                     if oldest_first:
                         # Phase 1: find the oldest message id by walking backwards with 'before'
                         oldest_id = None
@@ -1121,41 +1135,46 @@ class DiscordEmotify(QWidget):
                                 mid = m.get("id")
                                 if not mid:
                                     continue
-                                url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{mid}/reactions/{emoji_enc}/@me"
-                                t0 = time.monotonic()
-                                resp = (
-                                    sess.delete(
-                                        url, headers=headers, timeout=self._timeout
+                                # Apply all selected emojis sequentially for this message
+                                for emoji_enc in emoji_encodings:
+                                    url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{mid}/reactions/{emoji_enc}/@me"
+                                    t0 = time.monotonic()
+                                    resp = (
+                                        sess.delete(
+                                            url, headers=headers, timeout=self._timeout
+                                        )
+                                        if clear
+                                        else sess.put(
+                                            url, headers=headers, timeout=self._timeout
+                                        )
                                     )
-                                    if clear
-                                    else sess.put(
-                                        url, headers=headers, timeout=self._timeout
-                                    )
-                                )
-                                if resp.status_code in (401, 403):
-                                    self.sig_error.emit(
-                                        "Unauthorized"
-                                        if resp.status_code == 401
-                                        else "Forbidden reacting"
-                                    )
-                                    self.sig_running.emit(False)
-                                    return
-                                if resp.status_code == 429:
-                                    try:
-                                        retry = resp.json().get("retry_after", 1)
-                                    except Exception:
-                                        retry = 1
-                                    time.sleep(float(retry) + 0.1)
-                                else:
-                                    # Pace reactions
-                                    elapsed = time.monotonic() - t0
-                                    if elapsed < interval:
-                                        time.sleep(interval - elapsed)
-                                processed += 1
-                                self.sig_status.emit(f"Processed {processed}…")
-                                if max_messages and processed >= max_messages:
+                                    if resp.status_code in (401, 403):
+                                        self.sig_error.emit(
+                                            "Unauthorized"
+                                            if resp.status_code == 401
+                                            else "Forbidden reacting"
+                                        )
+                                        self.sig_running.emit(False)
+                                        return
+                                    if resp.status_code == 429:
+                                        try:
+                                            retry = resp.json().get("retry_after", 1)
+                                        except Exception:
+                                            retry = 1
+                                        time.sleep(float(retry) + 0.1)
+                                    else:
+                                        # Pace per reaction
+                                        elapsed = time.monotonic() - t0
+                                        if elapsed < interval:
+                                            time.sleep(interval - elapsed)
+                                    processed_reactions += 1
                                     self.sig_status.emit(
-                                        f"Processed {processed} (limit reached)"
+                                        f"Msgs {processed_messages} | Reactions {processed_reactions}…"
+                                    )
+                                processed_messages += 1
+                                if max_messages and processed_messages >= max_messages:
+                                    self.sig_status.emit(
+                                        f"Msgs {processed_messages} | Reactions {processed_reactions} (limit reached)"
                                     )
                                     self.sig_running.emit(False)
                                     return
@@ -1198,40 +1217,45 @@ class DiscordEmotify(QWidget):
                                 mid = m.get("id")
                                 if not mid:
                                     continue
-                                url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{mid}/reactions/{emoji_enc}/@me"
-                                t0 = time.monotonic()
-                                resp = (
-                                    sess.delete(
-                                        url, headers=headers, timeout=self._timeout
+                                # Apply all selected emojis sequentially for this message
+                                for emoji_enc in emoji_encodings:
+                                    url = f"https://discord.com/api/v10/channels/{channel_id}/messages/{mid}/reactions/{emoji_enc}/@me"
+                                    t0 = time.monotonic()
+                                    resp = (
+                                        sess.delete(
+                                            url, headers=headers, timeout=self._timeout
+                                        )
+                                        if clear
+                                        else sess.put(
+                                            url, headers=headers, timeout=self._timeout
+                                        )
                                     )
-                                    if clear
-                                    else sess.put(
-                                        url, headers=headers, timeout=self._timeout
-                                    )
-                                )
-                                if resp.status_code in (401, 403):
-                                    self.sig_error.emit(
-                                        "Unauthorized"
-                                        if resp.status_code == 401
-                                        else "Forbidden reacting"
-                                    )
-                                    self.sig_running.emit(False)
-                                    return
-                                if resp.status_code == 429:
-                                    try:
-                                        retry = resp.json().get("retry_after", 1)
-                                    except Exception:
-                                        retry = 1
-                                    time.sleep(float(retry) + 0.1)
-                                else:
-                                    elapsed = time.monotonic() - t0
-                                    if elapsed < interval:
-                                        time.sleep(interval - elapsed)
-                                processed += 1
-                                self.sig_status.emit(f"Processed {processed}…")
-                                if max_messages and processed >= max_messages:
+                                    if resp.status_code in (401, 403):
+                                        self.sig_error.emit(
+                                            "Unauthorized"
+                                            if resp.status_code == 401
+                                            else "Forbidden reacting"
+                                        )
+                                        self.sig_running.emit(False)
+                                        return
+                                    if resp.status_code == 429:
+                                        try:
+                                            retry = resp.json().get("retry_after", 1)
+                                        except Exception:
+                                            retry = 1
+                                        time.sleep(float(retry) + 0.1)
+                                    else:
+                                        elapsed = time.monotonic() - t0
+                                        if elapsed < interval:
+                                            time.sleep(interval - elapsed)
+                                    processed_reactions += 1
                                     self.sig_status.emit(
-                                        f"Processed {processed} (limit reached)"
+                                        f"Msgs {processed_messages} | Reactions {processed_reactions}…"
+                                    )
+                                processed_messages += 1
+                                if max_messages and processed_messages >= max_messages:
+                                    self.sig_status.emit(
+                                        f"Msgs {processed_messages} | Reactions {processed_reactions} (limit reached)"
                                     )
                                     self.sig_running.emit(False)
                                     return

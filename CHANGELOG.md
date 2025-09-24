@@ -24,3 +24,11 @@ The format is based on Keep a Changelog and this project adheres to Semantic Ver
 - Chore: Bump in-app version, embedded Windows file/product version, and packaging metadata to 1.0.1.
 
 [1.0.1]: https://github.com/Otm02/DiscordEmotifyV2/releases/tag/v1.0.1
+
+## [1.1.0] - 2025-09-24
+
+- Feature: Support multiple emojis in the input field (separated by space or comma). The app will react sequentially with each emoji per message.
+- Behavior: Rate limit (reactions/sec) applies to individual reactions, not in parallel, ensuring pacing per emoji per message.
+- UX: Updated placeholder and hint to describe multi-emoji input.
+
+[1.1.0]: https://github.com/Otm02/DiscordEmotifyV2/releases/tag/v1.1.0

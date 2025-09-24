@@ -42,6 +42,7 @@ Release assets are typically named like `DiscordEmotify-vX.Y.Z-win64.zip` and co
 	- Type `:smile:` or any standard shortcode (resolved via the `emoji` library if installed)
 	- Type `:custom_name:` to auto-resolve a custom guild emoji (falls back across your guilds)
 	- Or provide explicit custom format `name:id` if you know the emoji ID
+	- Multiple emojis can be entered; separate them by space or comma. Each emoji will be applied sequentially per message.
 6. Click "React to All Messages" (Start / Stop toggle)
 
 Note: Using user tokens for automation may violate Discord TOS. Use at your own risk.
