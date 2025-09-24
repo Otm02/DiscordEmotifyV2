@@ -22,6 +22,14 @@ The app follows SemVer. Current version is displayed in the window title and abo
 
 See `CHANGELOG.md` for details on each release.
 
+## Downloads (Releases)
+
+If you prefer not to build from source, download the latest prebuilt Windows package from GitHub Releases:
+
+- Latest release: https://github.com/Otm02/DiscordEmotifyV2/releases/latest
+
+Release assets are typically named like `DiscordEmotify-vX.Y.Z-win64.zip` and contain `DiscordEmotify.exe` inside the `DiscordEmotify` folder. Always ensure you downloaded from the official repository above.
+
 ## Usage
 
 1. Enter your Discord token (get from browser dev tools, Authorization header)
