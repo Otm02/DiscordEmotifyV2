@@ -42,7 +42,8 @@ try {
         }
         $certificate = $imported | Select-Object -First 1
         Write-Host "Imported certificate '$($certificate.Subject)' (Thumbprint: $($certificate.Thumbprint))."
-    } elseif ($CertificateThumbprint) {
+    }
+    elseif ($CertificateThumbprint) {
         $trimThumb = $CertificateThumbprint.Replace(" ", "")
         $certificate = Get-ChildItem -Path "Cert:\CurrentUser\My\$trimThumb" -ErrorAction SilentlyContinue
         if (-not $certificate) {
@@ -54,7 +55,8 @@ try {
         Write-Host "Signing $exePath ..."
         Set-AuthenticodeSignature -FilePath $exePath -Certificate $certificate -TimestampServer $TimestampUrl | Out-Null
         Write-Host "Signature applied with certificate: $($certificate.Subject)."
-    } else {
+    }
+    else {
         Write-Warning "No certificate provided. The executable will remain unsigned."
     }
 
