@@ -2,8 +2,8 @@
 
 VSVersionInfo(
   ffi=FixedFileInfo(
-  filevers=(1, 1, 0, 0),
-  prodvers=(1, 1, 0, 0),
+  filevers=(1, 2, 0, 0),
+  prodvers=(1, 2, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x4,
@@ -16,12 +16,12 @@ VSVersionInfo(
       StringTable('040904B0', [
         StringStruct('CompanyName', 'Otm02'),
         StringStruct('FileDescription', 'DiscordEmotify'),
-  StringStruct('FileVersion', '1.1.0'),
+  StringStruct('FileVersion', '1.2.0'),
         StringStruct('InternalName', 'DiscordEmotify'),
         StringStruct('LegalCopyright', 'Copyright (c) 2025'),
         StringStruct('OriginalFilename', 'DiscordEmotify.exe'),
         StringStruct('ProductName', 'DiscordEmotify'),
-  StringStruct('ProductVersion', '1.1.0'),
+  StringStruct('ProductVersion', '1.2.0'),
         StringStruct('Comments', 'https://github.com/Otm02/DiscordEmotifyV2')
       ])
     ]),

@@ -34,7 +34,7 @@ except Exception:
 
 # ---------------- Versioning & App metadata -----------------
 APP_NAME = "DiscordEmotify"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 REPO_URL = "https://github.com/Otm02/DiscordEmotifyV2"
 USER_AGENT = f"{APP_NAME}/{__version__} (+{REPO_URL})"
 

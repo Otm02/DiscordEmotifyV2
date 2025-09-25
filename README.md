@@ -87,10 +87,50 @@ Build steps:
 
 2. The executable will be at `dist\DiscordEmotify\DiscordEmotify.exe`.
 
-3. Zip the `dist\DiscordEmotify` folder contents for a GitHub Release asset, e.g. `DiscordEmotify-v1.0.0-win64.zip`.
+3. Zip the `dist\DiscordEmotify` folder contents for a GitHub Release asset, e.g. `DiscordEmotify-vX.Y.Z-win64.zip`.
 
 Notes:
 
 - Icons and resources are bundled.
 - The version info resource is embedded from `version_info.txt`. Update the version in that file and in `DiscordEmotify.py` (`__version__`) for a new release.
 - When running as a one-file bundle (`--onefile`), the included `resource_path` helper locates assets correctly. The provided spec uses a folder bundle for easier AV compatibility; you can switch to onefile by replacing `COLLECT` with a `onefile` `EXE` in the spec if desired.
+
+### Automated release (code signed + checksums)
+
+Use the helper script to build, (optionally) sign, zip, and hash the release in one go:
+
+````powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\create_release.ps1 -PfxPath "C:\path\to\codesign.pfx" -PfxPassword "<secret>"
+```
+
+Alternatively, provide the thumbprint of a certificate already installed in `Cert:\CurrentUser\My`:
+
+````powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\create_release.ps1 -CertificateThumbprint "ABCD1234EF567890ABCD1234EF567890ABCD1234"
+```
+
+The script will:
+
+- Run PyInstaller (unless `-SkipBuild` is passed).
+- Sign `dist\DiscordEmotify\DiscordEmotify.exe` using the supplied certificate (or skip with a warning).
+- Create `dist\DiscordEmotify-vX.Y.Z-win64.zip`.
+- Emit a matching SHA-256 manifest at `dist\DiscordEmotify-vX.Y.Z-win64.zip.sha256`.
+
+## Verification (signature & checksum)
+
+After downloading a release:
+
+1. Validate the SHA-256 checksum:
+
+	````powershell
+	Get-FileHash .\DiscordEmotify-vX.Y.Z-win64.zip -Algorithm SHA256
+	Get-Content .\DiscordEmotify-vX.Y.Z-win64.zip.sha256
+	```
+
+2. Confirm the executable signature (requires the signing certificate to be trusted on your machine):
+
+	````powershell
+	Get-AuthenticodeSignature .\DiscordEmotify\DiscordEmotify.exe | Format-List
+	```
+
+The zip and checksum files are produced by `scripts/create_release.ps1` so they can be uploaded directly to GitHub Releases.
